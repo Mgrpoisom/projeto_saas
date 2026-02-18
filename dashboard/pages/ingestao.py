@@ -1,31 +1,44 @@
 import streamlit as st
-import pandas as pd
 import requests
 
-st.title(" Ingestão de Dados")
+st.title("📥 Ingestão Manual - Projeto Zero")
 
-API_URL = "http://api:8000/subscribe"
+# Criamos um formulário organizado para os dados de P&L
+with st.form("manual_entry_form", clear_on_submit=True):
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        area = st.selectbox("Área", ["Operações", "TI", "RH", "Vendas", "Marketing"]) #
+        pl_line = st.text_input("Linha P&L (Ex: OPEX)") #
+        category = st.text_input("Categoria (Ex: Software)") #
+        provider = st.text_input("Fornecedor (Ex: Databricks)") #
 
-tab1, tab2 = st.tabs(["📄 Upload de Arquivo", "📝 Entrada Manual"])
+    with col2:
+        cost_center = st.text_input("Centro de Custo (Ex: 120202)") #
+        value = st.number_input("Valor (R$)", min_value=0.0, format="%.2f") #
+        month_ref = st.text_input("Mês de Referência (Ex: jul/26)") #
 
-with tab1:
-    arquivo = st.file_uploader("Suba seu CSV ou Excel", type=['csv', 'xlsx'])
-    if arquivo:
-        df = pd.read_csv(arquivo) if arquivo.name.endswith('.csv') else pd.read_excel(arquivo)
-        st.dataframe(df.head())
+    submit_button = st.form_submit_button("Registrar no Banco de Dados")
+
+    if submit_button:
+        # Montamos o payload no formato de lista (bulk) que a API espera
+        payload = [{
+            "area": area,
+            "pl_line": pl_line,
+            "category": category,
+            "cost_center": cost_center,
+            "provider": provider,
+            "value": value,
+            "month_ref": month_ref
+        }]
         
-        if st.button("Enviar para o Banco"):
-            for _, row in df.iterrows():
-                payload = {"customer_name": str(row['customer_name']), "mrr_value": float(row['mrr_value'])}
-                requests.post(API_URL, json=payload)
-            st.success("Dados enviados com sucesso!")
-
-with tab2:
-    with st.form("manual"):
-        nome = st.text_input("Nome do Cliente")
-        valor = st.number_input("Valor MRR", min_value=0.0)
-        if st.form_submit_button("Salvar"):
-            payload = {"customer_name": nome, "mrr_value": valor}
-            res = requests.post(API_URL, json=payload)
-            if res.status_code == 200:
-                st.success("Venda registrada!")
+        try:
+            # Enviamos para o endpoint /ingest que criamos
+            response = requests.post("http://api:8000/ingest", json=payload)
+            
+            if response.status_code == 200:
+                st.success(f"✅ Registro de {provider} salvo com sucesso!")
+            else:
+                st.error(f"❌ Erro na API: {response.json().get('detail')}")
+        except Exception as e:
+            st.error(f"⚠️ Erro de conexão: {e}")
