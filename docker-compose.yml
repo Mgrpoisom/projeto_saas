@@ -1,28 +1,34 @@
 ﻿services:
-  api:
-    build: .
-    container_name: projeto_zero_api
-    ports:
-      - "8000:8000"
-    restart: always  # <-- Isso fará a API tentar conectar até o banco estar pronto
-    
-    volumes:
-      - ./app:/app
-    env_file:
-      - .env
-    depends_on:
-      - db
-
   db:
     image: postgres:15
     container_name: projeto_zero_db
     restart: always
-    env_file:
-      - .env
+    env_file: .env
     ports:
       - "5433:5432"
     volumes:
       - ./db_data:/var/lib/postgresql/data
 
-volumes:
-  postgres_data:
+  api:
+    build: ./app
+    container_name: projeto_zero_api
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+    env_file: .env
+    depends_on:
+      - db
+
+  dashboard:
+    build: ./dashboard
+    container_name: projeto_zero_dash
+    restart: always
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./dashboard:/app
+    env_file: .env
+    depends_on:
+      - api
