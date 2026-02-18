@@ -1,0 +1,8 @@
+﻿services:
+  api:
+    build: .
+    container_name: projeto_zero_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
