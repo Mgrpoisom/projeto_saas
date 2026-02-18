@@ -4,6 +4,8 @@
     container_name: projeto_zero_api
     ports:
       - "8000:8000"
+    restart: always  # <-- Isso fará a API tentar conectar até o banco estar pronto
+    
     volumes:
       - ./app:/app
     env_file:
@@ -18,7 +20,7 @@
     env_file:
       - .env
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - ./db_data:/var/lib/postgresql/data
 
