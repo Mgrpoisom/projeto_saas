@@ -1,5 +1,5 @@
-plotly
 streamlit
 requests
 pandas
 openpyxl
+plotly
